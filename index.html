@@ -1,45 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quantum Measurement Simulator (Three.js)</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.4.4/math.min.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
-</head>
-<body>
-    <h1>Quantum Measurement Simulator</h1>
-    <div id="controls">
-        <label for="strengthSlider">Interaction Strength:</label>
-        <input type="range" id="strengthSlider" min="0" max="1" step="0.01" value="0.5">
-        <span id="strengthValue">0.50</span>
-        <button id="resetButton">Reset</button>
-    </div>
-    <div id="visualization-container">
-        <div class="panel" id="state-panel">
-            <h2>System State (Bloch Sphere)</h2>
-            <div id="state-canvas-container"></div>
-        </div>
-        <div class="panel" id="density-panel">
-            <h2>Density Matrix</h2>
-            <div id="density-canvas-container"></div>
-        </div>
-        <div class="panel" id="outcomes-panel">
-            <h2>Measurement Outcomes</h2>
-            <div id="outcomes-canvas-container"></div>
-        </div>
-        <div class="panel" id="entanglement-panel">
-            <h2>System-Environment Entanglement</h2>
-            <div id="entanglement-canvas-container"></div>
-        </div>
-        <div class="panel info-panel" id="info-panel">
-            <h2>Why Does Measurement Happen?</h2>
-            <div id="info-text">Initializing...</div>
-        </div>
-    </div>
-    <script type="module" src="script.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quantum Measurement Simulator</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
