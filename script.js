@@ -8,7 +8,8 @@ const ENTANGLEMENT_SIZE = 200;
 const TEXT_COLOR = 0xeeeeee; // Light color for text on density matrix
 
 // --- Math.js Setup ---
-const math = window.math; // Access math.js from the global scope
+// Access math.js from the global scope
+const math = window.mathjs || window.math;
 
 // --- Quantum Helper Functions ---
 
@@ -33,7 +34,7 @@ function partialTrace(rho, subsystemToTraceOut, dims = [2, 2]) {
     const rhoData = rho.toArray(); // Get array data
 
     if (subsystemToTraceOut === 1) { // Trace out system B (environment)
-        const rhoReduced = math.zeros(dimA, dimA, 'complex');
+        const rhoReduced = math.zeros(dimA, dimA);
         for (let i = 0; i < dimA; i++) {
             for (let j = 0; j < dimA; j++) {
                 let sum = math.complex(0, 0);
@@ -45,7 +46,7 @@ function partialTrace(rho, subsystemToTraceOut, dims = [2, 2]) {
         }
         return rhoReduced;
     } else { // Trace out system A (system)
-         const rhoReduced = math.zeros(dimB, dimB, 'complex');
+         const rhoReduced = math.zeros(dimB, dimB);
         for (let i = 0; i < dimB; i++) {
             for (let j = 0; j < dimB; j++) {
                 let sum = math.complex(0, 0);
@@ -250,10 +251,10 @@ class QuantumMeasurementSimulator {
         // System state: superposition |psi> = sqrt(0.3)|0> + sqrt(0.7)|1>
         this.alpha = math.sqrt(0.3);
         this.beta = math.sqrt(0.7);
-        this.psi_system = math.matrix([[this.alpha], [this.beta]], 'dense', 'complex');
+        this.psi_system = math.matrix([[this.alpha], [this.beta]], 'dense');
 
         // Environment state: |0>
-        this.psi_env = math.matrix([[1], [0]], 'dense', 'complex');
+        this.psi_env = math.matrix([[1], [0]], 'dense');
 
         // Total state: |Psi> = |psi> ⊗ |env>
         this.psi_total = math.kron(this.psi_system, this.psi_env);
@@ -267,9 +268,9 @@ class QuantumMeasurementSimulator {
             [0, 1, 0, 0],
             [0, 0, 0, 1],
             [0, 0, 1, 0]
-        ], 'dense', 'complex');
+        ], 'dense');
 
-        this.identity4 = math.identity(4, 4, 'complex');
+        this.identity4 = math.identity(4, 4);
     }
 
     applyInteraction(rho, strength) {
