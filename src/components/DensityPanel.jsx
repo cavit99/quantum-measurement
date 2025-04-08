@@ -3,19 +3,18 @@ import * as THREE from 'three';
 import * as math from 'mathjs';
 import { Box, Heading } from '@chakra-ui/react';
 
-const DensityPanel = ({ renderer, quantumData }) => {
-  const sceneRef = useRef(new THREE.Scene());
-  const cameraRef = useRef(new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100));
+const DensityPanel = ({ scene, camera, quantumData }) => {
   const canvasRef = useRef(document.createElement('canvas'));
   const textureRef = useRef(null);
   const fontLoaded = useRef(false);
+  const groupRef = useRef(new THREE.Group());
 
   useEffect(() => {
-    if (!renderer) return;
+    if (!scene || !camera) return;
 
-    const scene = sceneRef.current;
-    const camera = cameraRef.current;
-    camera.position.z = 5;
+    // Add our group to the scene
+    scene.add(groupRef.current);
+    const currentGroup = groupRef.current;
 
     // Setup canvas for texture
     const canvas = canvasRef.current;
@@ -33,7 +32,7 @@ const DensityPanel = ({ renderer, quantumData }) => {
     // Create plane for density matrix visualization
     const densityGeom = new THREE.PlaneGeometry(2, 2);
     const densityPlane = new THREE.Mesh(densityGeom, densityMat);
-    scene.add(densityPlane);
+    currentGroup.add(densityPlane);
 
     // Add grid lines
     const gridGeom = new THREE.EdgesGeometry(densityGeom);
@@ -41,7 +40,7 @@ const DensityPanel = ({ renderer, quantumData }) => {
       gridGeom, 
       new THREE.LineBasicMaterial({ color: 0xaaaaaa })
     );
-    scene.add(gridLine);
+    currentGroup.add(gridLine);
 
     // Add text labels
     if (!fontLoaded.current) {
@@ -58,7 +57,7 @@ const DensityPanel = ({ renderer, quantumData }) => {
           });
           const mesh = new THREE.Mesh(textGeom, textMat);
           mesh.position.set(x, y, z);
-          scene.add(mesh);
+          currentGroup.add(mesh);
         };
         
         addText('|0⟩⟐0|', -0.5, 0.8, 0);
@@ -66,22 +65,23 @@ const DensityPanel = ({ renderer, quantumData }) => {
       });
     }
 
-    // Animation loop
-    const animate = () => {
-      if (!renderer) return;
-      
-      // Set viewport and render
-      renderer.setViewport(350, 400, 200, 200);
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    };
-    animate();
-
     return () => {
-      // Clean up scene
-      scene.clear();
+      // Remove our group from the scene
+      scene.remove(currentGroup);
+      
+      // Dispose of geometries and materials
+      currentGroup.traverse(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(m => m.dispose());
+          } else {
+            child.material.dispose();
+          }
+        }
+      });
     };
-  }, [renderer]);
+  }, [scene, camera]);
 
   useEffect(() => {
     if (!textureRef.current || !quantumData.rho) return;
@@ -113,9 +113,9 @@ const DensityPanel = ({ renderer, quantumData }) => {
   }, [quantumData]);
 
   return (
-    <Box bg="white" p={4} borderRadius="md" boxShadow="md">
+    <Box bg="gray.700" color="white" p={4} borderRadius="md" boxShadow="md" h="250px">
       <Heading size="sm" mb={2}>Density Matrix</Heading>
-      <Box h="200px" position="relative"></Box>
+      {/* The actual Three.js content is now rendered via the central animation loop */}
     </Box>
   );
 };

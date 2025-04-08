@@ -2,18 +2,17 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Box, Heading } from '@chakra-ui/react';
 
-const OutcomesPanel = ({ renderer, quantumData }) => {
-  const sceneRef = useRef(new THREE.Scene());
-  const cameraRef = useRef(new THREE.OrthographicCamera(-1.2, 1.2, 1.2, -1.2, 0.1, 100));
+const OutcomesPanel = ({ scene, camera, quantumData }) => {
   const barsRef = useRef([null, null]);
   const fontLoaded = useRef(false);
+  const groupRef = useRef(new THREE.Group());
 
   useEffect(() => {
-    if (!renderer) return;
+    if (!scene || !camera) return;
 
-    const scene = sceneRef.current;
-    const camera = cameraRef.current;
-    camera.position.z = 5;
+    // Add our group to the scene
+    scene.add(groupRef.current);
+    const currentGroup = groupRef.current;
 
     // Create bars for outcome probabilities
     const barGeom = new THREE.BoxGeometry(0.6, 1, 0.1);
@@ -31,7 +30,7 @@ const OutcomesPanel = ({ renderer, quantumData }) => {
     barsRef.current[1].position.x = 0.5;
     
     // Add bars to scene
-    scene.add(barsRef.current[0], barsRef.current[1]);
+    currentGroup.add(barsRef.current[0], barsRef.current[1]);
 
     // Add text labels
     if (!fontLoaded.current) {
@@ -48,7 +47,7 @@ const OutcomesPanel = ({ renderer, quantumData }) => {
           });
           const mesh = new THREE.Mesh(textGeom, textMat);
           mesh.position.set(x, y, z);
-          scene.add(mesh);
+          currentGroup.add(mesh);
         };
         
         addText('|0⟩', -0.5, -1.2, 0);
@@ -56,22 +55,23 @@ const OutcomesPanel = ({ renderer, quantumData }) => {
       });
     }
 
-    // Animation loop
-    const animate = () => {
-      if (!renderer) return;
-      
-      // Set viewport and render
-      renderer.setViewport(700, 400, 200, 200);
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    };
-    animate();
-
     return () => {
-      // Clean up scene
-      scene.clear();
+      // Remove our group from the scene
+      scene.remove(currentGroup);
+      
+      // Dispose of geometries and materials
+      currentGroup.traverse(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(m => m.dispose());
+          } else {
+            child.material.dispose();
+          }
+        }
+      });
     };
-  }, [renderer]);
+  }, [scene, camera]);
 
   useEffect(() => {
     if (!barsRef.current[0] || !barsRef.current[1] || !quantumData.probs) return;
@@ -90,9 +90,9 @@ const OutcomesPanel = ({ renderer, quantumData }) => {
   }, [quantumData]);
 
   return (
-    <Box bg="white" p={4} borderRadius="md" boxShadow="md">
+    <Box bg="gray.700" color="white" p={4} borderRadius="md" boxShadow="md" h="250px">
       <Heading size="sm" mb={2}>Measurement Outcomes</Heading>
-      <Box h="200px" position="relative"></Box>
+      {/* The actual Three.js content is now rendered via the central animation loop */}
     </Box>
   );
 };

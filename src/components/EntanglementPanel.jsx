@@ -2,19 +2,19 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Box, Heading } from '@chakra-ui/react';
 
-const EntanglementPanel = ({ renderer, quantumData }) => {
-  const sceneRef = useRef(new THREE.Scene());
-  const cameraRef = useRef(new THREE.OrthographicCamera(-1.5, 1.5, 1.5, -1.5, 0.1, 100));
+const EntanglementPanel = ({ scene, camera, quantumData }) => {
   const circlesRef = useRef([null, null]);
   const overlapRef = useRef(null);
   const fontLoaded = useRef(false);
+  const groupRef = useRef(new THREE.Group());
+  const animationRef = useRef({ time: 0 });
 
   useEffect(() => {
-    if (!renderer) return;
+    if (!scene || !camera) return;
 
-    const scene = sceneRef.current;
-    const camera = cameraRef.current;
-    camera.position.z = 5;
+    // Add our group to the scene
+    scene.add(groupRef.current);
+    const currentGroup = groupRef.current;
 
     // Create circles representing system and environment
     const circleGeom = new THREE.CircleGeometry(0.6, 32);
@@ -44,7 +44,7 @@ const EntanglementPanel = ({ renderer, quantumData }) => {
     );
     overlapRef.current.position.z = -0.1;
     
-    scene.add(circlesRef.current[0], circlesRef.current[1], overlapRef.current);
+    currentGroup.add(circlesRef.current[0], circlesRef.current[1], overlapRef.current);
 
     // Add text labels
     if (!fontLoaded.current) {
@@ -61,7 +61,7 @@ const EntanglementPanel = ({ renderer, quantumData }) => {
           });
           const mesh = new THREE.Mesh(textGeom, textMat);
           mesh.position.set(x, y, z);
-          scene.add(mesh);
+          currentGroup.add(mesh);
         };
         
         addText('System', -0.5, 0.8, 0);
@@ -69,25 +69,32 @@ const EntanglementPanel = ({ renderer, quantumData }) => {
       });
     }
 
-    // Animation loop with pulsing effect
-    const animate = () => {
-      if (!renderer || !overlapRef.current) return;
-      
-      // Pulse the overlap circle
-      overlapRef.current.material.opacity = 0.6 + 0.3 * Math.sin(Date.now() * 0.001);
-      
-      // Set viewport and render
-      renderer.setViewport(1050, 400, 200, 200);
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    };
-    animate();
+    // Setup animation frame callback
+    const intervalId = setInterval(() => {
+      if (overlapRef.current) {
+        animationRef.current.time += 0.05;
+        overlapRef.current.material.opacity = 0.6 + 0.3 * Math.sin(animationRef.current.time);
+      }
+    }, 50);
 
     return () => {
-      // Clean up scene
-      scene.clear();
+      // Remove our group from the scene
+      scene.remove(currentGroup);
+      clearInterval(intervalId);
+      
+      // Dispose of geometries and materials
+      currentGroup.traverse(child => {
+        if (child.geometry) child.geometry.dispose();
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(m => m.dispose());
+          } else {
+            child.material.dispose();
+          }
+        }
+      });
     };
-  }, [renderer]);
+  }, [scene, camera]);
 
   useEffect(() => {
     if (!overlapRef.current || quantumData.entanglement === undefined) return;
@@ -101,9 +108,9 @@ const EntanglementPanel = ({ renderer, quantumData }) => {
   }, [quantumData]);
 
   return (
-    <Box bg="white" p={4} borderRadius="md" boxShadow="md">
+    <Box bg="gray.700" color="white" p={4} borderRadius="md" boxShadow="md" h="250px">
       <Heading size="sm" mb={2}>System-Environment Entanglement</Heading>
-      <Box h="200px" position="relative"></Box>
+      {/* The actual Three.js content is now rendered via the central animation loop */}
     </Box>
   );
 };

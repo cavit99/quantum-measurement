@@ -23,6 +23,23 @@ const Simulator = () => {
   const rendererRef = useRef(null);
   const mountRef = useRef(null);
   
+  // Refs for panel scenes and cameras
+  const statePanelRef = useRef(null);
+  const stateSceneRef = useRef(new THREE.Scene());
+  const stateCameraRef = useRef(new THREE.PerspectiveCamera(45, 1, 0.1, 100));
+  
+  const densityPanelRef = useRef(null);
+  const densitySceneRef = useRef(new THREE.Scene());
+  const densityCameraRef = useRef(new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100));
+  
+  const outcomesPanelRef = useRef(null);
+  const outcomesSceneRef = useRef(new THREE.Scene());
+  const outcomesCameraRef = useRef(new THREE.OrthographicCamera(-1.2, 1.2, 1.2, -1.2, 0.1, 100));
+  
+  const entanglementPanelRef = useRef(null);
+  const entanglementSceneRef = useRef(new THREE.Scene());
+  const entanglementCameraRef = useRef(new THREE.OrthographicCamera(-1.5, 1.5, 1.5, -1.5, 0.1, 100));
+  
   // Initialize quantum state values
   const initialSystemState = useRef(math.matrix([[Math.sqrt(0.3)], [Math.sqrt(0.7)]], 'dense'));
   const initialEnvState = useRef(math.matrix([[1], [0]], 'dense'));
@@ -32,23 +49,102 @@ const Simulator = () => {
   const identityOperator = useRef(math.identity(4, 4));
 
   useEffect(() => {
+    // Initialize camera positions
+    stateCameraRef.current.position.set(0, 0, 2.5);
+    densityCameraRef.current.position.z = 5;
+    outcomesCameraRef.current.position.z = 5;
+    entanglementCameraRef.current.position.z = 5;
+    
     // Initialize renderer
     rendererRef.current = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+    rendererRef.current.setScissorTest(true); // Enable scissor for multiple viewports
     mountRef.current.appendChild(rendererRef.current.domElement);
 
     // Update quantum data for initial state
     updateQuantumData(strength);
 
+    // Setup animation loop
+    let animationFrameId;
+    const animate = () => {
+      animationFrameId = requestAnimationFrame(animate);
+      const renderer = rendererRef.current;
+      if (!renderer) return;
+      
+      // Render each panel's scene/camera in its viewport
+      renderPanel(
+        statePanelRef.current, 
+        stateSceneRef.current, 
+        stateCameraRef.current
+      );
+      
+      renderPanel(
+        densityPanelRef.current, 
+        densitySceneRef.current, 
+        densityCameraRef.current
+      );
+      
+      renderPanel(
+        outcomesPanelRef.current, 
+        outcomesSceneRef.current, 
+        outcomesCameraRef.current
+      );
+      
+      renderPanel(
+        entanglementPanelRef.current, 
+        entanglementSceneRef.current, 
+        entanglementCameraRef.current
+      );
+    };
+    
+    const renderPanel = (panelElement, scene, camera) => {
+      if (!panelElement || !scene || !camera || !renderer) return;
+      
+      const rect = panelElement.getBoundingClientRect();
+      const { left, top, width, height } = rect;
+      
+      // Skip rendering if panel is not visible
+      if (width === 0 || height === 0) return;
+      
+      // Convert coordinates to renderer's coordinate system
+      const canvas = renderer.domElement;
+      const pixelRatio = window.devicePixelRatio;
+      const canvasRect = canvas.getBoundingClientRect();
+      
+      const x = (left - canvasRect.left) * pixelRatio;
+      const y = (canvasRect.bottom - rect.bottom) * pixelRatio;
+      const w = width * pixelRatio;
+      const h = height * pixelRatio;
+      
+      // Update camera aspect ratio if needed
+      if (camera.isPerspectiveCamera && width > 0 && height > 0) {
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+      
+      // Set renderer viewport and scissor
+      renderer.setViewport(x, y, w, h);
+      renderer.setScissor(x, y, w, h);
+      renderer.render(scene, camera);
+    };
+    
+    animate();
+
     const handleResize = () => {
-      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      if (rendererRef.current) {
+        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      }
     };
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', handleResize);
       if (mountRef.current && rendererRef.current) {
         mountRef.current.removeChild(rendererRef.current.domElement);
+      }
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
       }
     };
   }, []);
@@ -108,10 +204,38 @@ const Simulator = () => {
         gridTemplateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} 
         gap={4}
       >
-        <StatePanel renderer={rendererRef.current} quantumData={quantumData} />
-        <DensityPanel renderer={rendererRef.current} quantumData={quantumData} />
-        <OutcomesPanel renderer={rendererRef.current} quantumData={quantumData} />
-        <EntanglementPanel renderer={rendererRef.current} quantumData={quantumData} />
+        <Box ref={statePanelRef}>
+          <StatePanel 
+            scene={stateSceneRef.current} 
+            camera={stateCameraRef.current} 
+            quantumData={quantumData} 
+          />
+        </Box>
+        
+        <Box ref={densityPanelRef}>
+          <DensityPanel 
+            scene={densitySceneRef.current} 
+            camera={densityCameraRef.current} 
+            quantumData={quantumData} 
+          />
+        </Box>
+        
+        <Box ref={outcomesPanelRef}>
+          <OutcomesPanel 
+            scene={outcomesSceneRef.current} 
+            camera={outcomesCameraRef.current} 
+            quantumData={quantumData} 
+          />
+        </Box>
+        
+        <Box ref={entanglementPanelRef}>
+          <EntanglementPanel 
+            scene={entanglementSceneRef.current} 
+            camera={entanglementCameraRef.current} 
+            quantumData={quantumData} 
+          />
+        </Box>
+        
         <InfoPanel 
           strength={strength} 
           quantumData={quantumData} 
@@ -119,7 +243,15 @@ const Simulator = () => {
         />
       </Box>
       
-      <div ref={mountRef} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }} />
+      <div ref={mountRef} style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        width: '100%', 
+        height: '100%', 
+        pointerEvents: 'none', 
+        zIndex: 10 // Higher than UI elements that shouldn't be interactive, lower than interactive UI
+      }} />
     </Box>
   );
 };
