@@ -1,0 +1,104 @@
+body {
+    font-family: sans-serif;
+    margin: 1em;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+h1, h2 {
+    text-align: center;
+    color: #1a1a1a;
+}
+
+#controls {
+    text-align: center;
+    margin-bottom: 1.5em;
+    background-color: #e0e0e0;
+    padding: 1em;
+    border-radius: 8px;
+}
+
+#controls label {
+    margin-right: 0.5em;
+}
+
+#controls button {
+    margin-left: 1em;
+    padding: 0.5em 1em;
+    cursor: pointer;
+}
+
+#visualization-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Responsive grid */
+    gap: 1em;
+    align-items: start; /* Align items at the top */
+}
+
+.panel {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 1em;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+    min-height: 250px; /* Ensure panels have some height */
+    display: flex;
+    flex-direction: column; /* Stack title above canvas */
+}
+
+.panel h2 {
+    margin-top: 0;
+    margin-bottom: 0.5em;
+    font-size: 1.1em;
+}
+
+/* Specific container styles */
+#state-canvas-container,
+#density-canvas-container,
+#outcomes-canvas-container,
+#entanglement-canvas-container {
+    flex-grow: 1; /* Allow canvas containers to fill panel space */
+    position: relative; /* Needed for potential absolute positioning inside */
+    width: 100%;
+    min-height: 200px; /* Minimum drawing area */
+    overflow: hidden; /* Clip content if needed */
+}
+
+#density-panel {
+    position: relative; /* For positioning labels */
+}
+
+#density-labels {
+    position: absolute;
+    top: 40px; /* Adjust as needed */
+    left: 10px;
+    display: grid;
+    grid-template-columns: 20px auto;
+    grid-template-rows: 20px auto;
+    gap: 5px;
+    color: rgba(255, 255, 255, 0.7); /* Make labels visible on dark matrix */
+    pointer-events: none; /* Don't interfere with mouse */
+    font-size: 0.8em;
+}
+#density-labels div:nth-child(1) { grid-area: 1 / 2; text-align: center; } /* Top |0> */
+#density-labels div:nth-child(2) { grid-area: 1 / 3; text-align: center; } /* Top |1> */
+#density-labels div:nth-child(3) { grid-area: 2 / 1; text-align: right; } /* Left |0> */
+#density-labels div:nth-child(4) { grid-area: 3 / 1; text-align: right; } /* Left |1> */
+
+
+.info-panel {
+    grid-column: span 2; /* Make info panel wider on larger screens if possible */
+    background-color: #e8f4f8;
+}
+
+#info-text {
+    white-space: pre-wrap; /* Preserve formatting */
+    font-size: 0.9em;
+    line-height: 1.4;
+    padding: 0.5em;
+}
+
+/* Style the range slider */
+input[type=range] {
+  width: 200px;
+}
