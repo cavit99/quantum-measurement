@@ -1,13 +1,11 @@
-import { theme as baseTheme, createMultiStyleConfigHelpers } from '@chakra-ui/react';
+import { defineStyle, defineStyleConfig, defineMultiStyleConfig } from '@chakra-ui/react';
 
 const theme = {
-  ...baseTheme,
   config: {
     initialColorMode: 'light',
     useSystemColorMode: false,
   },
   colors: {
-    ...baseTheme.colors,
     brand: {
       50: '#f0f9ff',
       100: '#e0f2fe',
