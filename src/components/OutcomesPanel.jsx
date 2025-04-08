@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader'; 
 
 const OutcomesPanel = ({ scene, camera, quantumData }) => {
   const barsRef = useRef([null, null]);
@@ -19,7 +20,7 @@ const OutcomesPanel = ({ scene, camera, quantumData }) => {
     currentGroup.add(barsRef.current[0], barsRef.current[1]);
 
     if (!fontLoaded.current) {
-      const loader = new THREE.FontLoader();
+      const loader = new FontLoader(); // Use FontLoader directly
       loader.load('/helvetiker_regular.typeface.json', (font) => {
         fontLoaded.current = true;
         const textMat = new THREE.MeshBasicMaterial({ color: 0xeeeeee });
